@@ -95,7 +95,7 @@ def extract():
 	# Regex for #define NAME [VALUE] [COMMENT] with sanitized line
 	defgrep = re.compile(r'^(//)?\s*(#define)\s+([A-Za-z0-9_]+)\s*(.*?)\s*(//.+)?$')
 	# Defines to ignore
-	ignore = ('CONFIGURATION_H_VERSION', 'CONFIGURATION_ADV_H_VERSION', 'CONFIG_EXPORT')
+	ignore = ('CONFIGURATION_H_VERSION', 'CONFIGURATION_ADV_H_VERSION', 'CONFIG_EXAMPLES_DIR', 'CONFIG_EXPORT')
 	# Start with unknown state
 	state = Parse.NORMAL
 	# Serial ID
@@ -382,25 +382,40 @@ def main():
 		schema = None
 
 	if schema:
-		print("Generating JSON ...")
-		dump_json(schema, Path('schema.json'))
-		group_options(schema)
-		dump_json(schema, Path('schema_grouped.json'))
 
-		try:
-			import yaml
-		except ImportError:
-			print("Installing YAML module ...")
-			import subprocess
+		# Get the first command line argument
+		import sys
+		if len(sys.argv) > 1:
+			arg = sys.argv[1]
+		else:
+			arg = 'some'
+
+		# JSON schema
+		if arg in ['some', 'json', 'jsons']:
+			print("Generating JSON ...")
+			dump_json(schema, Path('schema.json'))
+
+		# JSON schema (wildcard names)
+		if arg in ['group', 'jsons']:
+			group_options(schema)
+			dump_json(schema, Path('schema_grouped.json'))
+
+		# YAML
+		if arg in ['some', 'yml', 'yaml']:
 			try:
-				subprocess.run(['python3', '-m', 'pip', 'install', 'pyyaml'])
 				import yaml
-			except:
-				print("Failed to install YAML module")
-				return
+			except ImportError:
+				print("Installing YAML module ...")
+				import subprocess
+				try:
+					subprocess.run(['python3', '-m', 'pip', 'install', 'pyyaml'])
+					import yaml
+				except:
+					print("Failed to install YAML module")
+					return
 
-		print("Generating YML ...")
-		dump_yaml(schema, Path('schema.yml'))
+			print("Generating YML ...")
+			dump_yaml(schema, Path('schema.yml'))
 
 if __name__ == '__main__':
 	main()
